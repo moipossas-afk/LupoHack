@@ -21,7 +21,7 @@ The PRD artwork remains explicitly identified as a conceptual mockup, not a live
 
 The placeholder license string was removed from package metadata rather than publishing an invented license. The resulting wheel builds successfully with no license field, pending an owner decision.
 
-The canonical GitHub destination is [moipossas-afk/LupoHack][1]. Its public visibility, `main` default branch, and unauthenticated Git read access were confirmed on 2026-10-22. The existing repository had one initial commit and only a README in its root; `main` was not protected. The exact supplied `git clone` command was tested without credentials against the canonical URL. An earlier unauthenticated browser request was inconclusive; the authenticated repository API and direct anonymous clone now confirm the destination.
+The canonical GitHub destination is [moipossas-afk/LupoHack][1]. Its public visibility, `main` default branch, and unauthenticated Git read access were confirmed on 2026-10-22. The existing repository had one initial commit and only a README in its root; `main` was not protected. The exact supplied `git clone` command was tested without credentials against the canonical URL. An earlier unauthenticated browser request was inconclusive; the authenticated repository API and direct anonymous clone now confirm the destination. The hosted GitHub Actions matrix passed all eight push/pull-request jobs on Ubuntu and Windows with Python 3.11 and 3.12.
 
 ## Outstanding release gates
 
@@ -33,7 +33,7 @@ The canonical GitHub destination is [moipossas-afk/LupoHack][1]. Its public visi
 
 ### Verification work still required
 
-- Run CI on the chosen repository and test every platform the project intends to support. Python package metadata declares Python 3.11+; recorded execution was Linux aarch64 with Python 3.12.3. Kali Linux, Windows, macOS, and other Linux distributions were not verified.
+- Add native compatibility validation beyond the passing Ubuntu/Windows CI matrix. Python package metadata declares Python 3.11+; recorded local execution was Linux aarch64 with Python 3.12.3. Kali Linux, macOS, and other Linux distributions were not verified; passing Windows CI tests does not establish a supported Windows release.
 - Test optional integrations with actual Nmap, Sherlock, ZAP, and Metasploit binaries inside isolated, authorized environments. The current integration tests use mocks. The upstream tools' supported platforms do not establish LupoHack compatibility.
 - Add cross-platform tests for launchers, subprocess handling, package managers, paths, and report storage before making native compatibility claims.
 - Continue hardening the HTTP destination boundary. Current checks reject non-public addresses and revalidate redirects, but they do not pin DNS resolutions and do not guarantee protection against every DNS-rebinding topology.

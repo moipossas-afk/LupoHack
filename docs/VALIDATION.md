@@ -26,7 +26,7 @@ On 2026-10-22, the authenticated GitHub API confirmed `moipossas-afk/LupoHack` a
 
 ## Environment and compatibility
 
-The recorded execution environment was the Manus Linux aarch64 sandbox with Python 3.12.3. Package metadata declares Python 3.11 or later. Kali Linux, Windows, macOS, and other Linux distributions were not validated. The GitHub Actions workflow is configured for pushes and pull requests on Ubuntu/Windows with Python 3.11/3.12. Its remote run status is reported separately from the local test results above.
+The recorded local execution environment was the Manus Linux aarch64 sandbox with Python 3.12.3. On 2026-10-22, all eight GitHub Actions jobs passed for the review branch: push and pull-request events, each with Ubuntu/Windows and Python 3.11/3.12. This verifies the configured test matrix only. Kali Linux, macOS, and other Linux distributions were not validated, and optional external-tool end-to-end behavior remains untested.
 
 ## Known limitations
 

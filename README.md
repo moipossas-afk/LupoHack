@@ -16,7 +16,7 @@ TCP and Nmap actions require explicit authorization. When `allowed_targets` is c
 
 ## Compatibility and verification status
 
-The package metadata declares Python 3.11 or later. The recorded validation environment was Python 3.12.3 on the Linux aarch64 Manus Sandbox. Kali Linux, Windows, macOS, and other Linux distributions were not verified for this release. The GitHub Actions workflow is configured but has not been run remotely. Do not interpret an installation guide or upstream tool's platform list as proof of LupoHack compatibility.
+The package metadata declares Python 3.11 or later. Local validation ran on Python 3.12.3 in a Linux aarch64 Manus Sandbox. On 2026-10-22, the GitHub Actions test matrix passed on Ubuntu and Windows with Python 3.11 and 3.12. Kali Linux, macOS, and other Linux distributions were not verified. Passing CI does not establish complete native compatibility or end-to-end tests for optional external tools.
 
 ## Repository
 

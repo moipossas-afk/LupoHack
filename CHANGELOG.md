@@ -24,3 +24,4 @@ CLI/menu, diagnostics, DNS A/AAAA, RDAP, TCP connectivity with confirmation, pub
 - Added an internationalization/readiness checklist and recorded owner-dependent publication gates.
 - Added the owner-requested Debian/Ubuntu `apt` + `git clone` installation steps to the README and Linux/Kali guides.
 - Verified the canonical public repository and completed an unauthenticated `git clone`; aligned source links and installation instructions to the confirmed URL.
+- Passed the hosted GitHub Actions matrix on Ubuntu and Windows with Python 3.11 and 3.12 for push and pull-request events.
