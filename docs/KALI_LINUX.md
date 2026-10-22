@@ -35,4 +35,4 @@ lupohack --help
 lupohack diagnostics
 ```
 
-The toolkit itself does not require `sudo`. Development dependencies are optional and should be installed only for development with `python -m pip install -e '.[dev]'`. Do not install Nmap or Metasploit unless the tool is needed, the source is verified, and the lab scope is authorized. See the separate [Nmap](tools/nmap.md) and [Metasploit](tools/metasploit.md) guides.
+The toolkit itself does not require `sudo`. Development dependencies are optional and should be installed only for development with `python -m pip install -e '.[dev]'`. Install external tools only when needed, from verified sources, and for an authorized lab scope. See the separate [Metasploit](tools/metasploit.md) guide.

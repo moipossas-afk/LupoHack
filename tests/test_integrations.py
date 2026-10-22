@@ -3,8 +3,7 @@ import sys
 import pytest
 
 from lupohack.config import ConfigError, config_path, load_config, save_config, set_config_value
-from lupohack.integrations import nmap, sherlock, tool_manager
-from lupohack.integrations.nmap import scan_authorized_host
+from lupohack.integrations import sherlock, tool_manager
 from lupohack.integrations.process import run_process
 from lupohack.integrations.sherlock import search_username
 
@@ -85,39 +84,6 @@ def test_sherlock_validates_usernames_and_reports_unavailable_or_matches(monkeyp
     ]
 
 
-def test_nmap_scope_validation_and_mocked_xml(monkeypatch, tmp_path):
-    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
-    monkeypatch.setattr(nmap, "executable", lambda: "/usr/bin/nmap")
-    xml = '<nmaprun><host><status state="up"/><address addr="198.51.100.4" addrtype="ipv4"/><ports><port protocol="tcp" port="443"><state state="open"/><service name="https"/></port></ports></host></nmaprun>'
-    monkeypatch.setattr(
-        nmap,
-        "run_process",
-        lambda *a, **k: type(
-            "R",
-            (),
-            {"status": "SUCCESS", "returncode": 0, "stdout": xml, "stderr": "", "error": None},
-        )(),
-    )
-    with pytest.raises(PermissionError):
-        scan_authorized_host("example.test", authorized=False)
-    result = scan_authorized_host("198.51.100.4", authorized=True)
-    assert result["hosts"][0]["ports"][0]["state"] == "open"
-    assert result["scope"].startswith("one host")
-
-
-def test_nmap_missing(monkeypatch, tmp_path):
-    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
-    monkeypatch.setattr(nmap, "executable", lambda: None)
-    assert scan_authorized_host("example.test", authorized=True)["status"] == "UNAVAILABLE"
-
-
-def test_nmap_respects_configured_allowlist(monkeypatch, tmp_path):
-    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
-    save_config({**load_config(), "allowed_targets": ["allowed.example"]})
-    with pytest.raises(PermissionError, match="allowed_targets"):
-        scan_authorized_host("other.example", authorized=True)
-
-
 def test_config_validation_atomic_roundtrip(monkeypatch, tmp_path):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
     assert load_config()["language"] == "en"
@@ -136,17 +102,14 @@ def test_config_validation_atomic_roundtrip(monkeypatch, tmp_path):
 
 def test_tool_manager_missing_and_install_decisions(monkeypatch):
     monkeypatch.setattr(tool_manager.shutil, "which", lambda _name: None)
-    assert tool_manager.inspect_tool("nmap")["status"] == "MISSING"
-    assert tool_manager.installation_plan("nmap")["status"] in (
-        "INSTALLER_AVAILABLE",
-        "MANUAL_INSTALL",
-    )
-    assert tool_manager.install_selected("nmap", confirmed=False)["status"] == "CANCELLED"
+    assert tool_manager.inspect_tool("git")["status"] == "MISSING"
+    assert tool_manager.installation_plan("git")["status"] == "MANUAL_INSTALL"
+    assert tool_manager.install_selected("git", confirmed=False)["status"] == "CANCELLED"
 
 
 def test_tool_manager_version_detection(monkeypatch):
     monkeypatch.setattr(
-        tool_manager.shutil, "which", lambda name: "/usr/bin/nmap" if name == "nmap" else None
+        tool_manager.shutil, "which", lambda name: "/usr/bin/git" if name == "git" else None
     )
     monkeypatch.setattr(
         tool_manager,
@@ -154,18 +117,18 @@ def test_tool_manager_version_detection(monkeypatch):
         lambda *a, **k: type(
             "R",
             (),
-            {"status": "SUCCESS", "stdout": "Nmap version 7.95", "stderr": "", "returncode": 0},
+            {"status": "SUCCESS", "stdout": "git version 2.45.0", "stderr": "", "returncode": 0},
         )(),
     )
-    result = tool_manager.inspect_tool("nmap")
-    assert result["status"] == "AVAILABLE" and "7.95" in result["version"]
+    result = tool_manager.inspect_tool("git")
+    assert result["status"] == "AVAILABLE" and "2.45.0" in result["version"]
     assert result["version_check_status"] == "VERIFIED"
     assert result["platform_support_status"] == "EXPECTED_NOT_VERIFIED"
 
 
 def test_tool_manager_does_not_claim_failed_version_check_is_verified(monkeypatch):
     monkeypatch.setattr(
-        tool_manager.shutil, "which", lambda name: "/usr/bin/nmap" if name == "nmap" else None
+        tool_manager.shutil, "which", lambda name: "/usr/bin/git" if name == "git" else None
     )
     monkeypatch.setattr(
         tool_manager,
@@ -182,11 +145,11 @@ def test_tool_manager_does_not_claim_failed_version_check_is_verified(monkeypatc
             },
         )(),
     )
-    inspected = tool_manager.inspect_tool("nmap")
+    inspected = tool_manager.inspect_tool("git")
     assert inspected["status"] == "AVAILABLE"
     assert inspected["version"] is None
     assert inspected["version_check_status"] == "FAILED"
-    assert tool_manager.installation_plan("nmap")["status"] == "ALREADY_DETECTED_NOT_VERIFIED"
+    assert tool_manager.installation_plan("git")["status"] == "ALREADY_DETECTED_NOT_VERIFIED"
 
 
 def test_tool_manager_does_not_run_version_flags_on_zap_exe(monkeypatch):

@@ -22,14 +22,12 @@ def test_direct_subcommand_help(capsys):
 def test_extended_commands_parse():
     p = build_parser()
     assert p.parse_args(["osint", "username", "public_user"]).action == "username"
-    assert p.parse_args(["network", "nmap", "host.example", "--authorized"]).authorized
-    assert p.parse_args(["tools", "install", "nmap", "--execute"]).execute
     assert p.parse_args(["config", "set", "default_timeout_seconds", "10"]).value == "10"
     assert p.parse_args(["tools", "setup", "--full"]).full
 
 
 def test_emit_serializes_tool_lists_as_json(capsys):
-    _emit([{"id": "nmap", "status": "MISSING"}])
+    _emit([{"id": "sherlock", "status": "MISSING"}])
     assert '"status": "MISSING"' in capsys.readouterr().out
 
 

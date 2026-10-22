@@ -12,7 +12,6 @@ lupohack osint rdap example.org
 lupohack osint username YOUR_AUTHORIZED_TEST_USERNAME
 lupohack network dns example.org
 lupohack network tcp lab.example 443 --authorized
-lupohack network nmap lab.example --authorized
 lupohack web https://example.org --authorized
 lupohack files hash ./sample.bin --algorithm sha256 -o hash.json
 lupohack reports list
@@ -24,7 +23,7 @@ lupohack config path
 
 ## Scope and confirmations
 
-TCP and Nmap require `--authorized` on the CLI. The interactive menu asks the user to type `YES`. If `allowed_targets` is non-empty, its normalized host entries apply to TCP and Nmap; out-of-scope requests are rejected before a connection or scan starts. Nmap accepts one host, not a CIDR range. Web inspection also requires authorization and blocks non-public destinations and redirects to them.
+TCP requires `--authorized` on the CLI. The interactive menu asks the user to type `YES`. If `allowed_targets` is non-empty, its normalized host entries apply to TCP; out-of-scope requests are rejected before a connection starts. Web inspection also requires authorization and blocks non-public destinations and redirects to them.
 
 The configuration keys `require_scope_confirmation` and `allow_external_targets` are accepted for compatibility but are not consulted by the V1 runtime. Confirmation remains mandatory for the applicable operations, and these fields do not grant or remove scope. Do not use them as security controls.
 
@@ -34,8 +33,6 @@ Use these concrete commands to inspect or plan a tool:
 
 ```bash
 lupohack tools check
-lupohack tools show nmap
-lupohack tools install nmap
 lupohack tools setup
 lupohack tools setup --full
 ```

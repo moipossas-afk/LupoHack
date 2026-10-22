@@ -14,7 +14,6 @@ def diagnostics() -> dict:
     tools = check_all()
     by_id = {item["id"]: item for item in tools}
     sherlock = by_id["sherlock"]["status"]
-    nmap = by_id["nmap"]["status"]
     dns_dependency = next(item for item in tools if item["id"] == "dnspython")
     return {
         "app_version": __version__,
@@ -45,9 +44,6 @@ def diagnostics() -> dict:
             "username_search": "AVAILABLE_LIMITED"
             if sherlock == "AVAILABLE"
             else "UNAVAILABLE (Sherlock missing)",
-            "nmap_scan": "AVAILABLE_LIMITED"
-            if nmap == "AVAILABLE"
-            else "UNAVAILABLE (Nmap missing)",
             "zap": "AVAILABLE_LIMITED"
             if by_id["zap"]["status"] == "AVAILABLE"
             else "UNAVAILABLE (ZAP missing)",
