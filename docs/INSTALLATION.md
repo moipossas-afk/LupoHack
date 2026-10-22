@@ -4,7 +4,7 @@
 
 The package metadata declares Python 3.11 or later. The recorded validation environment was Python 3.12.3 on Linux aarch64 in the Manus Sandbox. Kali Linux, Windows, macOS, and other Linux distributions were not verified for this release. Platform-specific guides describe commands, not a claim that LupoHack has been tested on that platform.
 
-LupoHack Core uses `dnspython>=2.6,<3` for DNS queries. Nmap, Sherlock, OWASP ZAP, Metasploit Framework, and Git are optional external tools, not Python runtime requirements.
+LupoHack Core uses `dnspython>=2.6,<3` for DNS queries. Sherlock, OWASP ZAP, Metasploit Framework, and Git are optional external tools, not Python runtime requirements.
 
 ## Install from a source checkout
 
@@ -81,7 +81,7 @@ Core installation uses `python -m pip install -e .` and does not install those d
 
 ## Optional tools
 
-The external-tool plans are separate from Core. Use `lupohack tools check`, `lupohack tools show nmap`, and `lupohack tools install nmap` to inspect status and an installation plan. The accepted tool identifiers are `nmap`, `sherlock`, `zap`, `metasploit`, and `git`. A detected supported installer can be run only with `--execute` and an exact confirmation. Read [TOOLS.md](TOOLS.md) and the individual guides before installing an external tool. LupoHack does not claim real-binary integration testing for this release.
+The external-tool plans are separate from Core. Use `lupohack tools check` to inspect available tools. The accepted tool identifiers are `sherlock`, `zap`, `metasploit`, and `git`. A detected supported installer can be run only with `--execute` and an exact confirmation. Read [TOOLS.md](TOOLS.md) and the individual guides before installing an external tool. LupoHack does not claim real-binary integration testing for this release.
 
 ## Uninstall
 

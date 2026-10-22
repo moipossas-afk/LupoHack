@@ -14,7 +14,6 @@ from lupohack.core.store import clear_history, data_dir, history, save_result
 from lupohack.core.validation import validate_ip_or_host, validate_port
 from lupohack.diagnostics import diagnostics
 from lupohack.integrations.lab_tools import launch_tool
-from lupohack.integrations.nmap import scan_authorized_host
 from lupohack.integrations.sherlock import search_username
 from lupohack.integrations.tool_manager import (
     CATALOG,
@@ -127,10 +126,6 @@ def build_parser():
     q = nsub.add_parser("dns")
     q.add_argument("host")
     q.add_argument("-o", "--output")
-    q = nsub.add_parser("nmap", help="TCP connect scan of one authorized host (top 20 ports)")
-    q.add_argument("host")
-    q.add_argument("--authorized", action="store_true")
-    q.add_argument("-o", "--output")
     q = nsub.add_parser("tcp")
     q.add_argument("host")
     q.add_argument("port", type=int)
@@ -216,7 +211,7 @@ def run(args):
                         "profile": "Core",
                         "command": "python -m pip install -e .",
                         "includes": "LupoHack and dnspython",
-                        "external_tools": "Core setup does not install optional tools. Check current availability with `lupohack tools check`. For example, `lupohack tools install nmap` displays its plan; add `--execute` only to request a supported installation.",
+                        "external_tools": "Core setup does not install optional tools. Check current availability with `lupohack tools check`.",
                     }
                 )
         elif action == "launch":
@@ -258,12 +253,6 @@ def run(args):
             host = _validate_network_scope(args.host)
             data = tcp_check(host, args.port)
             _save("network", "tcp", f"{host}:{args.port}", data, args.output)
-        else:
-            if not args.authorized:
-                raise ValueError("Nmap requires explicit confirmation with --authorized.")
-            host = _validate_network_scope(args.host)
-            data = scan_authorized_host(host, authorized=True)
-            _save("network", "nmap", host, data, args.output)
     elif args.command == "web":
         if not args.authorized:
             raise ValueError(
@@ -349,7 +338,7 @@ def menu():
                     _save("osint", operation, d, data)
             elif choice == "3":
                 h = input("Host: ").strip()
-                act = input("[1] DNS [2] TCP [3] Nmap (single host): ").strip()
+                act = input("[1] DNS [2] TCP: ").strip()
                 if act == "1":
                     _save("network", "dns", h, dns_lookup(h))
                 elif act == "2":
@@ -360,15 +349,6 @@ def menu():
                         _save("network", "tcp", f"{h}:{port}", tcp_check(h, port))
                     else:
                         print("Cancelled; no connection was attempted.")
-                elif act == "3":
-                    h = _validate_network_scope(h)
-                    confirm = input(
-                        f"Nmap TCP connect scan of the top 20 ports on {h}. Are you authorized? Type YES: "
-                    )
-                    if confirm == "YES":
-                        _save("network", "nmap", h, scan_authorized_host(h, authorized=True))
-                    else:
-                        print("Cancelled; Nmap was not started.")
             elif choice == "4":
                 u = input("URL: ").strip()
                 confirm = input(

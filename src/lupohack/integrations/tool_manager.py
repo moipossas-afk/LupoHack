@@ -9,22 +9,6 @@ import shutil
 from lupohack.integrations.process import run_process
 
 CATALOG = {
-    "nmap": {
-        "display": "Nmap",
-        "executables": ["nmap"],
-        "version_args": ["--version"],
-        "purpose": "Controlled discovery of authorized TCP services",
-        "modules": ["network"],
-        "integration": "IMPLEMENTED_LIMITED",
-        "docs": "https://nmap.org/book/man.html",
-        "install": {
-            "Linux-debian": "sudo apt-get install nmap",
-            "Linux-fedora": "sudo dnf install nmap",
-            "Linux-arch": "sudo pacman -S nmap",
-            "Windows": "Official installer: https://nmap.org/download.html",
-            "Darwin": "Official downloads: https://nmap.org/download.html",
-        },
-    },
     "sherlock": {
         "display": "Sherlock",
         "executables": ["sherlock"],
@@ -129,7 +113,6 @@ def inspect_tool(name: str) -> dict:
                 )
     os_name = platform.system()
     supported = {
-        "nmap": ("Linux", "Windows", "Darwin"),
         "sherlock": ("Linux", "Windows", "Darwin"),
         "zap": ("Linux", "Windows", "Darwin"),
         "metasploit": ("Linux", "Windows", "Darwin"),
@@ -200,24 +183,6 @@ def installation_plan(name: str) -> dict:
             "tool": item,
             "message": "Tool already detected; it will not be reinstalled.",
         }
-    if name.lower() == "nmap" and platform.system() == "Linux":
-        key = _platform_key()
-        commands = {
-            "Linux-debian": ["sudo", "apt-get", "install", "nmap"],
-            "Linux-fedora": ["sudo", "dnf", "install", "nmap"],
-            "Linux-arch": ["sudo", "pacman", "-S", "--needed", "nmap"],
-        }
-        cmd = commands.get(key)
-        if cmd and all(shutil.which(program) for program in cmd[:2]):
-            return {
-                "status": "INSTALLER_AVAILABLE",
-                "tool": item,
-                "argv": cmd,
-                "privileges": "sudo/admin",
-                "disk_space": "Not estimated; depends on the package manager and system dependencies.",
-                "system_changes": "Installs the Nmap system package and package-manager dependencies.",
-                "instructions": "After explicit confirmation, run the displayed command. LupoHack then checks the executable and version.",
-            }
     if name.lower() == "sherlock" and shutil.which("pipx"):
         return {
             "status": "INSTALLER_AVAILABLE",

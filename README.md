@@ -2,17 +2,15 @@
 
 LupoHack is a local, defensive cybersecurity toolkit for authorized diagnostics, public-information lookups, and local file analysis. It provides a command-line interface and an interactive terminal menu. It has no backend, online account, or telemetry. Use it only on systems, networks, files, and data you are authorized to access.
 
-![Conceptual LupoHack startup mockup from the PRD; this is not a screenshot of the current CLI.](assets/logo/prd-startup-reference.png)
-
 ## Project status and scope
 
 The V1 core includes environment diagnostics; DNS A, AAAA, MX, NS, TXT, and CNAME lookups; RDAP queries; TCP connectivity checks; limited HTTP(S) response-header inspection; local file hashes and metadata; local report history; JSON, CSV, and TXT export; and validated local JSON configuration.
 
-Optional external-tool adapters cover Sherlock username searches, a single-host Nmap TCP-connect scan, and detection/version checks plus confirmation-gated local launches for OWASP ZAP and Metasploit Framework. Their real binaries were not installed or tested in the validation environment. A successful PATH check is not an end-to-end integration test. ZAP API/scanning and automated Metasploit modules, exploits, payloads, or targets are not part of LupoHack V1. **LupoHack is not a vulnerability scanner.**
+Optional external-tool adapters cover Sherlock username searches and detection/version checks plus confirmation-gated local launches for OWASP ZAP and Metasploit Framework. Their real binaries were not installed or tested in the validation environment. A successful PATH check is not an end-to-end integration test. ZAP API/scanning and automated Metasploit modules, exploits, payloads, or targets are not part of LupoHack V1. **LupoHack is not a vulnerability scanner.**
 
 DNS queries disclose the queried domain to the configured resolver. RDAP and web requests contact their corresponding public services. Sherlock queries public websites and does not establish that a profile belongs to a particular person. Outputs are stored locally unless a user explicitly exports them.
 
-TCP and Nmap actions require explicit authorization. When `allowed_targets` is configured, it is enforced for TCP and Nmap operations. Nmap is limited to one host, TCP connect, the top 20 ports, `-T2`, XML output, and a timeout; it does not run vulnerability scripts. Web inspection requires authorization and blocks non-public destinations and redirects to them. The configuration keys `require_scope_confirmation` and `allow_external_targets` are retained, but do not change these V1 runtime rules; do not rely on them to disable confirmation or grant scope.
+TCP actions require explicit authorization. When `allowed_targets` is configured, it is enforced for TCP operations. Web inspection requires authorization and blocks non-public destinations and redirects to them. The configuration keys `require_scope_confirmation` and `allow_external_targets` are retained, but do not change these V1 runtime rules; do not rely on them to disable confirmation or grant scope.
 
 ## Compatibility and verification status
 
@@ -94,18 +92,15 @@ To remove the package from the active environment, run `python -m pip uninstall 
 
 ## Optional external tools
 
-Nmap, Sherlock, OWASP ZAP, Metasploit Framework, and Git are not Python runtime dependencies. They are not installed by Core setup or in a batch. The Full Toolkit option displays individual plans; users choose and confirm each supported system change separately.
+Sherlock, OWASP ZAP, Metasploit Framework, and Git are not Python runtime dependencies. They are not installed by Core setup or in a batch. The Full Toolkit option displays individual plans; users choose and confirm each supported system change separately.
 
 ```bash
 lupohack tools check
-lupohack tools show nmap
-lupohack tools install nmap
-lupohack tools install nmap --execute
 lupohack tools setup
 lupohack tools setup --full
 ```
 
-`lupohack tools install nmap` displays a plan. On supported Linux package-manager configurations, `--execute` requests an installation and requires typing the exact confirmation phrase shown by the program. It may change system packages and require administrator privileges. See the [Tool Manager overview](docs/TOOLS.md) and the separate [Nmap](docs/tools/nmap.md), [Sherlock](docs/tools/sherlock.md), [OWASP ZAP](docs/tools/owasp-zap.md), and [Metasploit Framework](docs/tools/metasploit.md) guides before installing or launching an external tool.
+The Tool Manager displays plans for supported optional tools; requesting an installation can change system packages and require administrator privileges. See the [Tool Manager overview](docs/TOOLS.md) and the separate [Sherlock](docs/tools/sherlock.md), [OWASP ZAP](docs/tools/owasp-zap.md), and [Metasploit Framework](docs/tools/metasploit.md) guides before installing or launching an external tool.
 
 ## Common commands
 
@@ -117,7 +112,6 @@ lupohack tools show sherlock
 lupohack config show
 lupohack config set allowed_targets '["lab.example"]'
 lupohack network tcp lab.example 443 --authorized
-lupohack network nmap lab.example --authorized
 lupohack web https://example.org --authorized
 lupohack files hash ./sample.bin --algorithm sha256 -o hash.json
 lupohack reports list
@@ -127,7 +121,7 @@ The `lab.example` commands above are examples, not authorization to connect. Rep
 
 ## CLI and interactive menu
 
-Run `lupohack GROUP --help` for each command group's exact syntax. The CLI groups are: `diagnostics`; `tools` (`check`, `show`, `install`, `launch`, `setup`); `osint` (`dns`, `rdap`, `username`); `network` (`dns`, `tcp`, `nmap`); `web`; `files` (`hash`, `compare`); `reports` (`list`, `show`, `clear`, `export`); and `config` (`show`, `set`, `path`).
+Run `lupohack GROUP --help` for each command group's exact syntax. The CLI groups are: `diagnostics`; `tools` (`check`, `show`, `install`, `launch`, `setup`); `osint` (`dns`, `rdap`, `username`); `network` (`dns`, `tcp`); `web`; `files` (`hash`, `compare`); `reports` (`list`, `show`, `clear`, `export`); and `config` (`show`, `set`, `path`).
 
 Run `lupohack` without arguments to open the interactive menu. Its options are Dashboard and diagnostics, OSINT, Network, Web security, File analysis, External tools, Authorized lab guide, Reports and history, Settings, and Exit. The menu requests confirmation before applicable network checks and local-tool launches.
 
@@ -143,7 +137,10 @@ Run `lupohack` without arguments to open the interactive menu. Its options are D
 - `src/lupohack/integrations/`: external process runner and optional-tool adapters.
 - `tests/`: offline tests using mocks and fixtures.
 - `docs/`: installation, usage, module, security-boundary, and external-tool guides.
-- `assets/logo/prd-startup-reference.png`: a conceptual PRD mockup, not a live screenshot of the current CLI.
+
+## License
+
+LupoHack is licensed under the [MIT License](LICENSE).
 
 ## Development and contribution
 
@@ -155,4 +152,4 @@ Start with `lupohack diagnostics` and `lupohack tools check`. If the `lupohack` 
 
 ## Publication readiness
 
-No license has been selected, and no private security-reporting contact has been configured. The owner must decide both before a public release. Cross-platform CI and real external-tool integration testing also remain outstanding. See [SECURITY.md](SECURITY.md), [the roadmap](docs/ROADMAP.md), and the [validation report](docs/VALIDATION.md) for details.
+No private security-reporting contact has been configured. Cross-platform CI and real external-tool integration testing also remain outstanding. See [SECURITY.md](SECURITY.md), [the roadmap](docs/ROADMAP.md), and the [validation report](docs/VALIDATION.md) for details.
