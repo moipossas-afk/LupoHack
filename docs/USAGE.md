@@ -12,6 +12,8 @@ lupohack osint rdap example.org
 lupohack osint username YOUR_AUTHORIZED_TEST_USERNAME
 lupohack network dns example.org
 lupohack network tcp lab.example 443 --authorized
+lupohack network tls lab.example --authorized
+lupohack tools inventory --status available
 lupohack web https://example.org --authorized
 lupohack files hash ./sample.bin --algorithm sha256 -o hash.json
 lupohack reports list
@@ -23,7 +25,7 @@ lupohack config path
 
 ## Scope and confirmations
 
-TCP requires `--authorized` on the CLI. The interactive menu asks the user to type `YES`. If `allowed_targets` is non-empty, its normalized host entries apply to TCP; out-of-scope requests are rejected before a connection starts. Web inspection also requires authorization and blocks non-public destinations and redirects to them.
+TCP and TLS require `--authorized` on the CLI. The interactive menu asks the user to type `YES`. If `allowed_targets` is non-empty, its normalized host entries apply to TCP and TLS; out-of-scope requests are rejected before a connection starts. TLS inspection performs one handshake with the default certificate and hostname checks, not a port scan or cryptographic audit. Web inspection also requires authorization and blocks non-public destinations and redirects to them.
 
 The configuration keys `require_scope_confirmation` and `allow_external_targets` are accepted for compatibility but are not consulted by the V1 runtime. Confirmation remains mandatory for the applicable operations, and these fields do not grant or remove scope. Do not use them as security controls.
 
@@ -55,5 +57,11 @@ lupohack config set allowed_targets '["lab.example"]'
 ```
 
 Use `lupohack config set default_timeout_seconds 10` for a validated integer example. `lupohack reports show REPORT_ID` displays an existing local record. `lupohack reports export REPORT_ID ./report.json` exports it; replace `REPORT_ID` with an ID returned by `lupohack reports list`. `lupohack reports clear` asks for confirmation before deleting local history.
+
+## Interactive menu navigation
+
+The main menu groups only implemented features into Reconnaissance, Network diagnostics, Web security, Files & forensics, Tools & environment, Reports & history, and Settings & help. Within a submenu, `B` returns to the category list, `0` returns to the main menu, `H` prints contextual help, and `Q` exits. Tool inventory pagination uses `N` and `P` when multiple pages exist. The banner is ASCII-only and uses color only for an interactive terminal that has not set `NO_COLOR`.
+
+`lupohack tools inventory` checks whether the four optional catalog executables occur on `PATH`; it does not run them. Use `--query`, `--category`, `--status`, `--page`, and `--page-size` for search, filtering, and pagination. The presence result is intentionally distinct from the more active `lupohack tools check` version probes.
 
 For installation or tool troubleshooting, see [INSTALLATION.md](INSTALLATION.md) and [TOOLS.md](TOOLS.md). For the safety boundary, read [SECURITY.md](../SECURITY.md).

@@ -1,16 +1,18 @@
 # LupoHack V1
 
+![Original LupoHack fox mark](https://raw.githubusercontent.com/moipossas-afk/LupoHack/main/assets/logo/lupohack-fox-mark.png)
+
 LupoHack is a local, defensive cybersecurity toolkit for authorized diagnostics, public-information lookups, and local file analysis. It provides a command-line interface and an interactive terminal menu. It has no backend, online account, or telemetry. Use it only on systems, networks, files, and data you are authorized to access.
 
 ## Project status and scope
 
-The V1 core includes environment diagnostics; DNS A, AAAA, MX, NS, TXT, and CNAME lookups; RDAP queries; TCP connectivity checks; limited HTTP(S) response-header inspection; local file hashes and metadata; local report history; JSON, CSV, and TXT export; and validated local JSON configuration.
+The V1 core includes environment diagnostics; DNS A, AAAA, MX, NS, TXT, and CNAME lookups; RDAP queries; TCP connectivity checks; one-endpoint TLS certificate inspection with default trust validation; limited HTTP(S) response-header inspection; local file hashes and metadata; local report history; JSON, CSV, and TXT export; and validated local JSON configuration. The interactive terminal has an original ASCII wordmark/fox banner and category-based submenus; optional external-tool inventory is a presence-only PATH lookup.
 
 Optional external-tool adapters cover Sherlock username searches and detection/version checks plus confirmation-gated local launches for OWASP ZAP and Metasploit Framework. Their real binaries were not installed or tested in the validation environment. A successful PATH check is not an end-to-end integration test. ZAP API/scanning and automated Metasploit modules, exploits, payloads, or targets are not part of LupoHack V1. **LupoHack is not a vulnerability scanner.**
 
 DNS queries disclose the queried domain to the configured resolver. RDAP and web requests contact their corresponding public services. Sherlock queries public websites and does not establish that a profile belongs to a particular person. Outputs are stored locally unless a user explicitly exports them.
 
-TCP actions require explicit authorization. When `allowed_targets` is configured, it is enforced for TCP operations. Web inspection requires authorization and blocks non-public destinations and redirects to them. The configuration keys `require_scope_confirmation` and `allow_external_targets` are retained, but do not change these V1 runtime rules; do not rely on them to disable confirmation or grant scope.
+TCP and TLS actions require explicit authorization. When `allowed_targets` is configured, it is enforced for both operations. Web inspection requires authorization and blocks non-public destinations and redirects to them. The configuration keys `require_scope_confirmation` and `allow_external_targets` are retained, but do not change these V1 runtime rules; do not rely on them to disable confirmation or grant scope.
 
 ## Compatibility and verification status
 
@@ -96,6 +98,8 @@ Sherlock, OWASP ZAP, Metasploit Framework, and Git are not Python runtime depend
 
 ```bash
 lupohack tools check
+lupohack tools inventory
+lupohack tools inventory --query git --status available
 lupohack tools setup
 lupohack tools setup --full
 ```
@@ -112,6 +116,7 @@ lupohack tools show sherlock
 lupohack config show
 lupohack config set allowed_targets '["lab.example"]'
 lupohack network tcp lab.example 443 --authorized
+lupohack network tls lab.example --authorized
 lupohack web https://example.org --authorized
 lupohack files hash ./sample.bin --algorithm sha256 -o hash.json
 lupohack reports list
@@ -121,9 +126,13 @@ The `lab.example` commands above are examples, not authorization to connect. Rep
 
 ## CLI and interactive menu
 
-Run `lupohack GROUP --help` for each command group's exact syntax. The CLI groups are: `diagnostics`; `tools` (`check`, `show`, `install`, `launch`, `setup`); `osint` (`dns`, `rdap`, `username`); `network` (`dns`, `tcp`); `web`; `files` (`hash`, `compare`); `reports` (`list`, `show`, `clear`, `export`); and `config` (`show`, `set`, `path`).
+Run `lupohack GROUP --help` for each command group's exact syntax. The CLI groups are: `diagnostics`; `tools` (`inventory`, `check`, `show`, `install`, `launch`, `setup`); `osint` (`dns`, `rdap`, `username`); `network` (`dns`, `tcp`, `tls`); `web`; `files` (`hash`, `compare`); `reports` (`list`, `show`, `clear`, `export`); and `config` (`show`, `set`, `path`).
 
-Run `lupohack` without arguments to open the interactive menu. Its options are Dashboard and diagnostics, OSINT, Network, Web security, File analysis, External tools, Authorized lab guide, Reports and history, Settings, and Exit. The menu requests confirmation before applicable network checks and local-tool launches.
+Run `lupohack` without arguments to open the ASCII fox/wordmark and categorized interactive menu: Reconnaissance, Network diagnostics, Web security, Files & forensics, Tools & environment, Reports & history, and Settings & help. Submenus use `B` to return, `0` for the main menu, `H` for contextual help, and `Q` to quit. Network operations require explicit confirmation; local launches and history deletion have separate confirmations. The banner uses color only on a color-capable interactive terminal and includes a compact narrow-terminal variant.
+
+`lupohack tools inventory` performs a fast presence-only lookup of the four optional catalog entries (Sherlock, OWASP ZAP, Metasploit Framework, and Git). It does not execute them or assert version, configuration, or readiness. Use `lupohack tools check` for the more detailed dependency and version probes.
+
+`lupohack network tls HOST --authorized` makes one TLS handshake to the selected host and port (443 by default), with normal certificate-chain and hostname validation. It reports peer certificate metadata and expiry; it is not a port scan or a cryptographic audit. When `allowed_targets` is configured, TLS targets must match that allowlist.
 
 ## Configuration and local data
 
@@ -131,9 +140,10 @@ Run `lupohack` without arguments to open the interactive menu. Its options are D
 
 ## Project structure
 
-- `src/lupohack/cli.py`: CLI parser, direct commands, and interactive menu.
+- `src/lupohack/cli.py`: CLI parser, direct commands, authorization checks, and result persistence.
+- `src/lupohack/menu.py` and `console.py`: categorized interactive navigation and adaptive ASCII branding.
 - `src/lupohack/core/`: validation, result models, export, and local history.
-- `src/lupohack/modules/`: DNS/RDAP, network, web, and file services.
+- `src/lupohack/modules/`: DNS/RDAP, network/TLS, web, and file services.
 - `src/lupohack/integrations/`: external process runner and optional-tool adapters.
 - `tests/`: offline tests using mocks and fixtures.
 - `docs/`: installation, usage, module, security-boundary, and external-tool guides.

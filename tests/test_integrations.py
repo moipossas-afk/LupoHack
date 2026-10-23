@@ -167,6 +167,40 @@ def test_tool_manager_does_not_run_version_flags_on_zap_exe(monkeypatch):
     assert result["version"] is None
 
 
+def test_tool_inventory_is_presence_only_categorized_and_filterable(monkeypatch):
+    monkeypatch.setattr(
+        tool_manager.shutil,
+        "which",
+        lambda name: f"/usr/bin/{name}" if name in {"git", "sherlock"} else None,
+    )
+    monkeypatch.setattr(
+        tool_manager,
+        "run_process",
+        lambda *a, **k: pytest.fail("presence-only inventory must not execute tools"),
+    )
+    result = tool_manager.tool_inventory(status="available", page_size=1)
+    assert result["summary"]["external_tools_total"] == 4
+    assert result["summary"]["available_on_path"] == 2
+    assert result["total_matching"] == 2 and result["total_pages"] == 2
+    assert result["items"][0]["version_checked"] is False
+    page_two = tool_manager.tool_inventory(page=2, page_size=1)
+    assert page_two["page"] == 2 and len(page_two["items"]) == 1
+    second_page = tool_manager.tool_inventory(query="git", category="Development Utilities", page=1)
+    assert [item["id"] for item in second_page["items"]] == ["git"]
+    assert second_page["items"][0]["configuration_verified"] is False
+
+
+def test_tool_inventory_rejects_invalid_filters_and_pages():
+    with pytest.raises(ValueError, match="Status must be"):
+        tool_manager.tool_inventory(status="unknown")
+    with pytest.raises(ValueError, match="page_size"):
+        tool_manager.tool_inventory(page_size=0)
+    with pytest.raises(TypeError, match="page_size"):
+        tool_manager.tool_inventory(page_size=1.5)
+    with pytest.raises(TypeError, match="integers"):
+        tool_manager.tool_inventory(page=True)
+
+
 def test_metasploit_launch_is_confirmed_and_argument_free(monkeypatch):
     from lupohack.integrations import lab_tools
 

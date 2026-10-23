@@ -14,6 +14,7 @@ CATALOG = {
         "executables": ["sherlock"],
         "version_args": ["--version"],
         "purpose": "Search for usernames on public websites",
+        "category": "Reconnaissance",
         "modules": ["osint.username"],
         "integration": "IMPLEMENTED_LIMITED",
         "docs": "https://github.com/sherlock-project/sherlock",
@@ -28,6 +29,7 @@ CATALOG = {
         "executables": ["zaproxy", "zap.sh", "zap.bat", "ZAP.exe"],
         "version_args": ["-version"],
         "purpose": "Web proxy/scanner for lab use",
+        "category": "Web Security",
         "modules": ["web_security"],
         "integration": "DETECTION_AND_LAUNCH_ONLY",
         "docs": "https://www.zaproxy.org/docs/",
@@ -42,6 +44,7 @@ CATALOG = {
         "executables": ["msfconsole"],
         "version_args": ["--version"],
         "purpose": "Authorized lab tool",
+        "category": "Lab Frameworks",
         "modules": ["lab"],
         "integration": "DETECTION_AND_LAUNCH_ONLY",
         "docs": "https://docs.metasploit.com/",
@@ -56,6 +59,7 @@ CATALOG = {
         "executables": ["git"],
         "version_args": ["--version"],
         "purpose": "Version control",
+        "category": "Development Utilities",
         "modules": [],
         "integration": "DETECTION_ONLY",
         "docs": "https://git-scm.com/docs",
@@ -121,7 +125,7 @@ def inspect_tool(name: str) -> dict:
     return {
         "id": key,
         "name": item["display"],
-        "category": item["purpose"],
+        "category": item["category"],
         "executable": path,
         "status": status,
         "version": version,
@@ -167,6 +171,85 @@ def check_python_dependency(name: str = "dnspython") -> dict:
 
 def check_all() -> list[dict]:
     return [check_python_dependency(), *[inspect_tool(k) for k in CATALOG]]
+
+
+def tool_inventory(
+    *,
+    query: str = "",
+    category: str = "",
+    status: str = "all",
+    page: int = 1,
+    page_size: int = 8,
+) -> dict:
+    """Return a fast presence-only inventory; never runs external tools."""
+    if type(page) is not int or type(page_size) is not int:
+        raise TypeError("Page and page_size must be integers.")
+    if page < 1 or page_size < 1 or page_size > 50:
+        raise ValueError("Page must be positive and page_size must be between 1 and 50.")
+    if not isinstance(status, str):
+        raise TypeError("Status must be a string: all, available, or missing.")
+    normalized_status = status.strip().lower()
+    if normalized_status not in {"all", "available", "missing"}:
+        raise ValueError("Status must be all, available, or missing.")
+
+    rows = []
+    for key, item in CATALOG.items():
+        executable = next(
+            (path for name in item["executables"] if (path := shutil.which(name))), None
+        )
+        rows.append(
+            {
+                "id": key,
+                "name": item["display"],
+                "category": item["category"],
+                "purpose": item["purpose"],
+                "status": "AVAILABLE_ON_PATH" if executable else "MISSING",
+                "executable": executable,
+                "detection_source": "PATH lookup",
+                "version_checked": False,
+                "configuration_verified": False,
+            }
+        )
+
+    query = query.strip().casefold()
+    category_key = category.strip().casefold()
+    filtered = [
+        row
+        for row in rows
+        if (not query or query in " ".join(str(value) for value in row.values()).casefold())
+        and (not category_key or row["category"].casefold() == category_key)
+        and (
+            normalized_status == "all"
+            or (normalized_status == "available" and row["status"] == "AVAILABLE_ON_PATH")
+            or (normalized_status == "missing" and row["status"] == "MISSING")
+        )
+    ]
+    total = len(filtered)
+    pages = max(1, (total + page_size - 1) // page_size)
+    if page > pages:
+        raise ValueError(f"Page must be between 1 and {pages} for these filters.")
+    start = (page - 1) * page_size
+    detected_categories = sorted(
+        {row["category"] for row in rows if row["status"] == "AVAILABLE_ON_PATH"}
+    )
+    return {
+        "summary": {
+            "external_tools_total": len(rows),
+            "available_on_path": sum(row["status"] == "AVAILABLE_ON_PATH" for row in rows),
+            "missing_from_path": sum(row["status"] == "MISSING" for row in rows),
+            "categories_with_available_tools": detected_categories,
+        },
+        "filters": {"query": query, "category": category, "status": normalized_status},
+        "page": page,
+        "page_size": page_size,
+        "total_matching": total,
+        "total_pages": pages,
+        "items": filtered[start : start + page_size],
+        "limitations": [
+            "Presence detection only; it does not establish executability, version, configuration, or readiness.",
+            "No external command was run to produce this inventory.",
+        ],
+    }
 
 
 def installation_plan(name: str) -> dict:

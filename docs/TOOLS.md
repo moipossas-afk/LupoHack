@@ -5,6 +5,8 @@ The Core application does not require optional system tools. The Tool Manager de
 ## Commands
 
 ```bash
+lupohack tools inventory
+lupohack tools inventory --query git --status available
 lupohack tools check
 lupohack tools launch zap
 lupohack tools launch metasploit
@@ -13,6 +15,10 @@ lupohack tools setup --full
 ```
 
 The accepted identifiers for `show` and `install` are `sherlock`, `zap`, `metasploit`, and `git`. Only `zap` and `metasploit` are accepted by `launch`.
+
+## Presence-only inventory
+
+`tools inventory` is the quick interactive/CLI list. It performs only `PATH` lookups and does not invoke any external executable. Current catalog categories are Reconnaissance (Sherlock), Web Security (OWASP ZAP), Lab Frameworks (Metasploit Framework), and Development Utilities (Git). Empty categories are not reported as available categories. Use `--query`, exact `--category`, `--status available|missing|all`, `--page`, and `--page-size` to filter and paginate. `AVAILABLE_ON_PATH` means only that an executable name was found; use `tools check` or `tools show NAME` for a separate, potentially active version probe. Neither confirms configuration or end-to-end readiness.
 
 The current supported automatic installation method is Sherlock through detected `pipx`. `--execute` is required to request one of those changes, and exact confirmation is required before a subprocess starts. ZAP and Metasploit use official manual installation instructions. No tool is installed in a batch or on first launch.
 

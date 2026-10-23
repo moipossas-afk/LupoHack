@@ -11,7 +11,7 @@ from lupohack.config import config_path, load_config, set_config_value
 from lupohack.core.export import export_result
 from lupohack.core.results import Result
 from lupohack.core.store import clear_history, data_dir, history, save_result
-from lupohack.core.validation import validate_ip_or_host, validate_port
+from lupohack.core.validation import validate_ip_or_host
 from lupohack.diagnostics import diagnostics
 from lupohack.integrations.lab_tools import launch_tool
 from lupohack.integrations.sherlock import search_username
@@ -21,10 +21,12 @@ from lupohack.integrations.tool_manager import (
     inspect_tool,
     install_selected,
     installation_plan,
+    tool_inventory,
 )
 from lupohack.modules.files import compare_files, file_info
 from lupohack.modules.network import dns_lookup, tcp_check
 from lupohack.modules.osint import dns_records, rdap_lookup
+from lupohack.modules.tls import inspect_tls
 from lupohack.modules.web import inspect_url
 
 
@@ -100,6 +102,14 @@ def build_parser():
     t = sub.add_parser("tools", help="Unified external tool manager")
     tsub = t.add_subparsers(dest="tool_action")
     tsub.add_parser("check", help="Check all dependencies")
+    inventory = tsub.add_parser(
+        "inventory", help="Fast categorized inventory; checks presence without running tools"
+    )
+    inventory.add_argument("--query", default="", help="Search name, purpose, or category")
+    inventory.add_argument("--category", default="", help="Exact category name")
+    inventory.add_argument("--status", choices=["all", "available", "missing"], default="all")
+    inventory.add_argument("--page", type=int, default=1)
+    inventory.add_argument("--page-size", type=int, default=8)
     tq = tsub.add_parser("show", help="Inspect a dependency")
     tq.add_argument("name", choices=list(CATALOG))
     tq = tsub.add_parser("install", help="Show instructions or install with explicit confirmation")
@@ -133,6 +143,15 @@ def build_parser():
         "--authorized",
         action="store_true",
         help="Confirm that you are authorized to test the target",
+    )
+    q.add_argument("-o", "--output")
+    q = nsub.add_parser("tls", help="Inspect one authorized TLS endpoint and its certificate")
+    q.add_argument("host")
+    q.add_argument("--port", type=int, default=443)
+    q.add_argument(
+        "--authorized",
+        action="store_true",
+        help="Confirm that you are authorized to connect to this target",
     )
     q.add_argument("-o", "--output")
     w = sub.add_parser("web", help="Inspect HTTP(S) headers on public destinations")
@@ -177,6 +196,16 @@ def run(args):
         action = args.tool_action
         if action in (None, "check"):
             _emit(check_all())
+        elif action == "inventory":
+            _emit(
+                tool_inventory(
+                    query=args.query,
+                    category=args.category,
+                    status=args.status,
+                    page=args.page,
+                    page_size=args.page_size,
+                )
+            )
         elif action == "show":
             _emit(inspect_tool(args.name))
         elif action == "install":
@@ -253,6 +282,14 @@ def run(args):
             host = _validate_network_scope(args.host)
             data = tcp_check(host, args.port)
             _save("network", "tcp", f"{host}:{args.port}", data, args.output)
+        elif args.action == "tls":
+            if not args.authorized:
+                raise ValueError(
+                    "Operation cancelled. Use --authorized only if you have explicit authorization for this target."
+                )
+            host = _validate_network_scope(args.host)
+            data = inspect_tls(host, args.port)
+            _save("network", "tls", f"{host}:{args.port}", data, args.output)
     elif args.command == "web":
         if not args.authorized:
             raise ValueError(
@@ -300,138 +337,9 @@ def run(args):
 
 
 def menu():
-    while True:
-        print(
-            "\n   /\\_/\\       L U P O H A C K  /  V1.0.0\n"
-            "  ( o.o )       Local defensive security toolkit\n"
-            "   > ^ <\n"
-            "╔══════════════════════════════════════════╗"
-        )
-        print(
-            "[1] Dashboard and diagnostics\n[2] OSINT — DNS/RDAP\n[3] Network — authorized DNS/TCP\n[4] Web security — public inspection\n[5] File analysis\n[6] External tools\n[7] Authorized lab guide\n[8] Reports and history\n[9] Settings\n[0] Exit"
-        )
-        try:
-            choice = input("\nSelect an option: ").strip()
-        except (EOFError, KeyboardInterrupt):
-            print("\nSession ended.")
-            return 0
-        try:
-            if choice == "0":
-                print("Goodbye.")
-                return 0
-            elif choice == "1":
-                _emit(diagnostics())
-            elif choice == "2":
-                d = input("Domain/username: ").strip()
-                act = input("[1] DNS [2] RDAP [3] Sherlock username search: ").strip()
-                operation = {"1": "dns", "2": "rdap", "3": "username"}.get(act)
-                if operation is None:
-                    print("Invalid option.")
-                else:
-                    data = (
-                        dns_records(d)
-                        if operation == "dns"
-                        else rdap_lookup(d)
-                        if operation == "rdap"
-                        else search_username(d)
-                    )
-                    _save("osint", operation, d, data)
-            elif choice == "3":
-                h = input("Host: ").strip()
-                act = input("[1] DNS [2] TCP: ").strip()
-                if act == "1":
-                    _save("network", "dns", h, dns_lookup(h))
-                elif act == "2":
-                    h = _validate_network_scope(h)
-                    port = validate_port(int(input("Port: ")))
-                    confirm = input(f"Confirm you are authorized to test {h}:{port}? Type YES: ")
-                    if confirm == "YES":
-                        _save("network", "tcp", f"{h}:{port}", tcp_check(h, port))
-                    else:
-                        print("Cancelled; no connection was attempted.")
-            elif choice == "4":
-                u = input("URL: ").strip()
-                confirm = input(
-                    "Confirm that you are authorized to inspect this service. Type YES: "
-                )
-                if confirm == "YES":
-                    _save("web_security", "inspect", u, inspect_url(u))
-                else:
-                    print("Cancelled.")
-            elif choice == "5":
-                path = input("File path: ").strip()
-                _save("file_analysis", "hash", path, file_info(path))
-            elif choice == "6":
-                print(
-                    "Tool Manager: [1] check all [2] inspect [3] install/guide [4] launch ZAP/Metasploit [5] Core/Full setup"
-                )
-                action = input("Action: ").strip()
-                if action in ("1", ""):
-                    _emit(check_all())
-                elif action == "2":
-                    name = input(f"Tool ({', '.join(CATALOG)}): ").strip().lower()
-                    _emit(inspect_tool(name))
-                elif action == "3":
-                    name = input(f"Tool ({', '.join(CATALOG)}): ").strip().lower()
-                    plan = installation_plan(name)
-                    _emit(plan)
-                    if plan["status"] == "INSTALLER_AVAILABLE":
-                        phrase = f"INSTALL {name}"
-                        confirmed = (
-                            input(f"Confirm system changes by typing {phrase}: ").strip() == phrase
-                        )
-                        result = install_selected(name, confirmed=confirmed)
-                        _emit(result)
-                        if result.get("status") in (
-                            "INSTALLED_AND_VERIFIED",
-                            "INSTALLED_BUT_NOT_VERIFIED",
-                        ):
-                            _emit(inspect_tool(name))
-                elif action == "4":
-                    name = input("Tool [zap/metasploit]: ").strip().lower()
-                    if name not in ("zap", "metasploit"):
-                        print("Invalid tool. Choose zap or metasploit.")
-                    else:
-                        phrase = f"OPEN {name}"
-                        confirmed = (
-                            input(f"This only opens the local application. Type {phrase}: ").strip()
-                            == phrase
-                        )
-                        _emit(launch_tool(name, confirmed=confirmed))
-                elif action == "5":
-                    profile = input("Setup [core/full]: ").strip().lower()
-                    if profile == "full":
-                        _emit(
-                            {
-                                "profile": "Full Toolkit plan",
-                                "tools": [installation_plan(name) for name in CATALOG],
-                            }
-                        )
-                    elif profile == "core":
-                        _emit(
-                            {
-                                "profile": "Core",
-                                "command": "python -m pip install -e .",
-                                "optional_tools": "Not installed by Core setup.",
-                            }
-                        )
-                    else:
-                        print("Invalid setup profile. Choose core or full.")
-                else:
-                    print("Invalid action.")
-            elif choice == "7":
-                print(
-                    "Use an isolated lab: an analysis VM and a deliberately vulnerable target VM on a host-only network with no Internet bridge. LupoHack V1 does not run exploits or launch Metasploit automatically. See docs/LABORATORY.md."
-                )
-            elif choice == "8":
-                _emit(history())
-            elif choice == "9":
-                _emit({"path": str(config_path()), "config": load_config()})
-            else:
-                print("Invalid option. Choose 0–9.")
-        except (ValueError, OSError, TimeoutError) as e:
-            print(f"ERROR: {e}")
-        input("\nPress Enter to continue...")
+    from lupohack.menu import menu as interactive_menu
+
+    return interactive_menu(_save, _emit)
 
 
 def main():
