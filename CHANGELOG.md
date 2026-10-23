@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — Console and defensive diagnostics
+## 1.1.0 — Console and defensive diagnostics (2026-10-23)
 
 - Added an original generated fox emblem and an adaptive ASCII wordmark/banner for the existing CLI.
 - Reorganized the interactive menu into implemented functional categories with contextual help and consistent navigation shortcuts.

@@ -1,5 +1,9 @@
 # Validation Record
 
+The first section below is a historical snapshot of the project before the v1.0.0 release. Its owner-decision, license, and tool statements describe that earlier state. The current v1.1.0 release-candidate checks are recorded at the end of this file.
+
+## Historical validation record — 1.0.0 preparation (2026-10-22)
+
 **Run date:** 2026-10-22
 **Project version:** 1.0.0
 
@@ -35,3 +39,12 @@ Real-binary tests for Nmap, Sherlock, OWASP ZAP, and Metasploit Framework remain
 ## References
 
 [1]: https://github.com/moipossas-afk/LupoHack "Canonical LupoHack repository"
+
+## Release-candidate validation — 1.1.0 (2026-10-23)
+
+- Local environment: Python 3.12.3.
+- `python -m pytest -q`: 37 tests passed.
+- `ruff check .`: passed; `ruff format --check .`: 53 files already formatted.
+- Built `lupohack-1.1.0-py3-none-any.whl` and `lupohack-1.1.0.tar.gz` with isolated setuptools 84.2.1 build environments.
+- Verified both distributions include the MIT license and 1.1.0 package metadata. Installed the wheel into an isolated target directory; `lupohack --version` and presence-only tool inventory succeeded, and an unauthorized TLS request was rejected before connecting.
+- Kali Linux native installation and optional external-tool end-to-end behavior were not tested in this environment.

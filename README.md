@@ -1,8 +1,10 @@
-# LupoHack V1
+# LupoHack 1.1.0
 
 ![Original LupoHack fox mark](https://raw.githubusercontent.com/moipossas-afk/LupoHack/main/assets/logo/lupohack-fox-mark.png)
 
 LupoHack is a local, defensive cybersecurity toolkit for authorized diagnostics, public-information lookups, and local file analysis. It provides a command-line interface and an interactive terminal menu. It has no backend, online account, or telemetry. Use it only on systems, networks, files, and data you are authorized to access.
+
+Version 1.1.0 adds a categorized interactive menu, original terminal branding, a safe optional-tool inventory, and validated single-endpoint TLS inspection. See the [changelog](CHANGELOG.md) for details.
 
 ## Project status and scope
 
@@ -63,6 +65,19 @@ lupohack
 ```
 
 Some distributions require their `python3-venv` package before creating the virtual environment. The core installation installs LupoHack and its declared Python runtime dependency. It does not install system applications.
+
+#### Update an existing Git checkout
+
+From the LupoHack repository directory, fast-forward to the current release and reinstall the editable package inside its activated virtual environment:
+
+```bash
+git pull --ff-only origin main
+python -m pip install -e .
+lupohack --help
+lupohack diagnostics
+```
+
+To pin an installation to this release rather than following `main`, use `git checkout v1.1.0` before reinstalling. PyPI distribution is not currently configured; use the GitHub source installation until a package index release is announced.
 
 ### Windows PowerShell
 
