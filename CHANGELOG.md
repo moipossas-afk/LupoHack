@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — Console and defensive diagnostics
+
+- Added an original generated fox emblem and an adaptive ASCII wordmark/banner for the existing CLI.
+- Reorganized the interactive menu into implemented functional categories with contextual help and consistent navigation shortcuts.
+- Added a categorized presence-only optional-tool inventory with search, status/category filters, and pagination; it never runs detected tools.
+- Added one-endpoint TLS certificate inspection with standard hostname/trust validation, explicit authorization, and `allowed_targets` enforcement.
+- Preserved the existing package layers and all previously implemented commands and external-tool integrations.
+
 ## 1.0.0 — Initial release
 
 CLI/menu, diagnostics, DNS A/AAAA, RDAP, TCP connectivity with confirmation, public HTTP(S) inspection, hashes, history, and export.
